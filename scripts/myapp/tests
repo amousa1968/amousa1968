@@ -1,17 +1,7 @@
 #!/usr/bin/env bash
 
-concatenated="$1$2"
-echo "$concatenated"
-echo "$concatenated" > $3
 
-exit 0
 
-#!/usr/bin/env bash
-
-setup() {
-    load 'test_helper/bats-support/load'
-    load 'test_helper/bats-assert/load'
-    load 'test_helper/bats-file/load'
-    DIR="$( cd "$( dirname "$BATS_TEST_FILENAME" )" >/dev/null 2>&1 && pwd )"
-    PATH="$DIR/../src:$PATH"
+@test "should run script" {
+    project.sh 'Hello ' 'Baeldung' '/tmp/output'
 }
