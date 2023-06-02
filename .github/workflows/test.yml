@@ -34,6 +34,7 @@ jobs:
         run: |
           mkdir -p ./.ci_bin
           echo "::add-path::$(pwd)/.ci_bin"
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
       - name: Install Bats
         run: |
           npm i bats
