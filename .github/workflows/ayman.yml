@@ -21,7 +21,7 @@ jobs:
             docker tag ${{ secrets.CONTAINER_REGISTRY_HOST }}/$ECR_REPOSITORY:latest ${{ secrets.CONTAINER_REGISTRY_HOST }}/$ECR_REPOSITORY:beta
 
       - name: Push to ECR
-        uses: amousa1968/aws-ecr-push-action@v1
+        uses: amousa1968/amousa1968@v1
         id: ecr
         with:
           # The complete repository name from ECR {BU}/{TEAM}/{PROJECT} (ex. cross/devtools/devtools-scripts).
