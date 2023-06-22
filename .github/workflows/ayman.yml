@@ -6,7 +6,7 @@ jobs:
     name: Docker build and push to ECR
     env:
       ## Repository must be in the format '<BU>/<SQUAD>/<PROJECT NAME | MY NAME>'
-      ECR_REPOSITORY: 'cross/devtools/momo'
+      ECR_REPOSITORY: 'ecr-python-demo'
       ECR_IMAGE_VERSION: '0.2.2'
     steps:
 
