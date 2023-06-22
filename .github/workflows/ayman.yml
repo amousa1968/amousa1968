@@ -1,40 +1,40 @@
-on: [push]
+name: ecr
+
+on:
+  push:
 
 jobs:
-  ecr:
+  build:
     runs-on: ubuntu-latest
-    name: Docker build and push to ECR
-    env:
-      ## Repository must be in the format '<BU>/<SQUAD>/<PROJECT NAME | MY NAME>'
-      ECR_REPOSITORY: 'ecr-python-demo'
-      ECR_IMAGE_VERSION: '0.2.2'
     steps:
-
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # Exemple of build using docker
-      - name: Docker Build
-        run: |
-            docker build --pull -t ${{ secrets.CONTAINER_REGISTRY_HOST }}/$ECR_REPOSITORY:latest .
-            docker tag ${{ secrets.CONTAINER_REGISTRY_HOST }}/$ECR_REPOSITORY:latest ${{ secrets.CONTAINER_REGISTRY_HOST }}/$ECR_REPOSITORY:$ECR_IMAGE_VERSION
-            docker tag ${{ secrets.CONTAINER_REGISTRY_HOST }}/$ECR_REPOSITORY:latest ${{ secrets.CONTAINER_REGISTRY_HOST }}/$ECR_REPOSITORY:beta
-
-      - name: Push to ECR
-        #uses: amousa1968/amousa1968@v1
-        uses: aws-actions/amazon-ecr-login@v1
-        id: ecr
+      -
+        name: Checkout
+        uses: actions/checkout@v2.3.1
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@master
         with:
-          # The complete repository name from ECR {BU}/{TEAM}/{PROJECT} (ex. cross/devtools/devtools-scripts).
-          ecr_repository: ${{ env.ECR_REPOSITORY }}
-          # Comma-separated string of ECR image tags (ex. latest, 1.0.0)
-          tags: 'latest,${{ env.ECR_IMAGE_VERSION }},beta'
-          # Keep last N images on ECR (default: 100)
-          keep_images: 20
-        # Warning! Don't change this env values!
-        # Just copy and paste this whole block as is in your repo
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_CROSS_ACCOUNT_ID }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_CROSS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_CROSS_SECRET_ACCESS_KEY }}
-          AWS_PRINCIPAL_RULES: ${{ secrets.AWS_PRINCIPAL_RULES }}
+          platforms: all
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@master
+      -
+        name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
+      -
+        name: Login to ECR
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          username: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      -
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/test-docker-action:latest
+            ${{ secrets.AWS_ACCOUNT_NUMBER }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/test-docker-action:1.0.0
