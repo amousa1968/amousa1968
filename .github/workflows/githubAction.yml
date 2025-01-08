@@ -1,0 +1,89 @@
+name: CI/CD Pipeline
+
+# Trigger the workflow on specific events
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+# Define the jobs to run in the workflow
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+# Step 1: Setup source code
+    steps:
+      # Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Run tests
+      - name: Run tests
+        run: npm test
+
+# Step 2: Install kubectl
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      # Step 3: Verify kubectl installation
+      - name: Verify kubectl version
+        run: kubectl version --client
+
+      # Step 4: Set up kubeconfig
+      - name: Set up kubeconfig
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+  deploy:
+    # This job depends on the build job and will only run if the build passes
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+# Step 1:
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Deploy to production
+        env:
+          API_KEY: ${{ secrets.API_KEY }}
+        run: |
+          echo "Deploying application..."
+          # Add your deployment script or command here
+          # For example, a deployment to a cloud service
+          npm run deploy
+
+# Step 2: Deploy to Kubernetes
+      - name: Apply Kubernetes manifests
+        run: kubectl apply -f ./k8s-manifests/
+
+# Step 3: Verify deployment status
+      - name: Check deployment status
+        run: kubectl rollout status deployment/<deployment-name> -n <namespace>
+
